@@ -8,7 +8,7 @@ services:
     restart: "unless-stopped"
     working_dir: "/app"
     ports:
-      - "8081:8081"
+      - "4000:4000"
     environment:
       MATTERMOST_SITEURL: "http://localhost:8065"
       APP_HOST: "app.ttjy.club" # Same as the service's network name

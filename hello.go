@@ -60,9 +60,12 @@ var bindings = []apps.Binding{
 					{
 						Label: "send",
 						Form: &apps.Form{
-							Title:  "Send a test webhook message",
-							Icon:   "icon.png",
-							Submit: apps.NewCall("/send"),
+							Title: "Send a test webhook message",
+							Icon:  "icon.png",
+							Submit: apps.NewCall("/send").WithExpand(apps.Expand{
+								Channel: apps.ExpandAll,
+								Team:    apps.ExpandAll,
+							}),
 							Fields: []apps.Field{
 								{
 									Name:                 "url",
@@ -133,19 +136,23 @@ func install(w http.ResponseWriter, req *http.Request) {
 }
 
 func webhookReceived(w http.ResponseWriter, req *http.Request) {
+	fmt.Printf("11111111111111\n")
 	creq := apps.CallRequest{}
 	json.NewDecoder(req.Body).Decode(&creq)
 
+	fmt.Printf("22222222222222222\n")
 	asBot := appclient.AsBot(creq.Context)
 	channelID := ""
 	asBot.KVGet("channel_id", "", &channelID)
+
+	fmt.Printf("hahahahahah %s \n", channelID)
 
 	asBot.CreatePost(&model.Post{
 		ChannelId: channelID,
 		Message:   fmt.Sprintf("received webhook, path `%s`, data: `%v`", creq.Path, creq.Values["data"]),
 	})
 
-	httputils.WriteJSON(w, apps.NewTextResponse("OK"))
+	httputils.WriteJSON(w, apps.NewTextResponse("ALLOK"))
 }
 
 func info(w http.ResponseWriter, req *http.Request) {
@@ -162,6 +169,14 @@ func send(w http.ResponseWriter, req *http.Request) {
 	creq := apps.CallRequest{}
 	json.NewDecoder(req.Body).Decode(&creq)
 	url, _ := creq.Values["url"].(string)
+
+	fmt.Printf("%s\n", url)
+	fmt.Printf("%+v\n", creq)
+	fmt.Printf("%+v\n", creq.Context.Channel)
+
+	// store the channel ID for future use
+	asBot := appclient.AsBot(creq.Context)
+	asBot.KVSet("channel_id", "", creq.Context.Channel.Id)
 
 	http.Post(
 		url,
